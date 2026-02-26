@@ -1,0 +1,272 @@
+\documentclass[11pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{amsmath, amssymb}   % for advances math typesetting
+\usepackage{graphicx}           % for including figures
+\usepackage{float}              % for precise figure placement
+\usepackage{listings}           % for MATLAB code formatting
+\usepackage{xcolor}             % for custom color
+\usepackage{hyperref}           % for clickable links/references
+
+% for MATLAB code formatting
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=Matlab,
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+% title page setup
+\title{\textbf{Computer Assignment: Chapter 3}\\ \Large Portfolio Optimization and the Markowitz Bullet}
+\author{Matteo Pinzani}
+\date{February 2026 \\ \textit{Linnaeus University, Växjö}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report analyzes the construction of optimal portfolios using three risky assets. By applying the principle of Portfolio Theory, we compute the covariance matrix, determine the Minimum Variance Line (MVL) using the Two-Fund Theorem, and visualize the feasible portfolios on both the weigths plane and the risk-return plane. The computational modeling is implemented in MATLAB.
+\end{abstract}
+
+\section{Mathematical Setup and Covariance Matrix}
+To evaluate a portfolio constructed from $n = 3$ risky assets, we first define the expected returns $\mu$, standard deviations $\sigma$, and the correlation matrix $\rho$. The expected returns are arranged in a row vector: 
+$$\textbf{m} = [\mu_1, \mu_2, \mu_3]$$
+The covariance between the returns $C_{ij} = \text{Cov}(K_i, \space K_j)$ is calculated as $\rho_{ij} \cdot \sigma_i \cdot \sigma_j$. In our computational model, the covariance matrix $C$ is generated efficiently using matrix multiplication:
+$$C = \text{diag}(\sigma) \cdot \rho \cdot \text{diag}(\sigma)$$
+This symmetric and non-negative definite matrix is essential for determining the portfolio variance, defined as $\sigma_V^2 = \textbf{w} \cdot C \cdot \textbf{w}^T$, where $\textbf{w}$ represents the row vector of asset weights.
+
+\section{The Minimum Variance Line and the Two-Fund Theorem}
+According to Theorem 3.30 (The Two-Fund Theorem), any portfolio on the Minimum Variance Line (MVL) can be expresses as a linear combination of two distinct portofolios on that same line. Consequently, the weights of any optimal portoflio depend linearly on the target expected return $\mu_V$:
+$$\textbf{w} = \mu_V \cdot \textbf{a} + \textbf{b}$$
+where $\textbf{a}$ and $\textbf{b}$ are constant vectors derived from the covariance matrix $C$ and the expected returns $\textbf{m}$. In our MATLAB simulation, we dynamically generate a range of target returns ($\mu \in [0.05, 0.30]$) and compute the corresponding optimal weights. Then, we apply the vectorized formula $\sigma_V = \sqrt{\textbf{w} \cdot C \cdot \textbf{w}^T}$ to efficiently calculate the risk across all generated portfolios.
+
+\section{Visualizing Feasible Portfolios}
+
+\subsection{The Weights Plane}
+Because the portfolio weights must sum to one ($\textbf{w}\textbf{u}^T = 1$, where $\textbf{u}$ is a row vector with all n entries equal to one), the entire system can be represented in a 2D plane using only $w_2$ and $w_3$. Figure 1 illustates this space. The center triangle encloses all portfolios constructed without short selling ($w_i \ge 0$). The bold line represents the Minimum Variance Line insersecting the feasible region.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{../images/Figure1.png}
+    \caption{Feasible portfolios and the MVL mapped on the $w_2, w_3$ plane.}
+\end{figure}
+
+\subsection{The Risk-Return Plane and Markowitz Bullet}
+To map the vast space of all possible asset combinations, we emply a \textbf{Monte Carlo simulation}. In computational mathematics and data analysis, a Monte Carlo method uses repeated random sampling to obtain empirical numerical results for systems that are too complex to solve purely analytically. 
+Rather than attempting the impossible task of calculating every infinite permutation of portfolio combinations, our algorithm generates tens of thousands or random, normalized weights vectors ($w_i$). By computing and plotting the expected return ($\mu$) and standard deviation ($\sigma$) for each of these randomly generated portfolios, we computationally approximate the entire feasible region in the risk-return plane.
+As shown in Figure 2, the outer boundary of this simulated region naturally converges to form a hyperbola known as the Markowitz bullet.
+The upper half of this hyperbola represents the \textbf{Efficient Frontier} portfolios that offer the highest expected return for a defined level of risk, strictly dominating any other portfolio below them. The randomly generated points clearly demonstrate the difference between portfolios allowing short-selling (extended cloud) and those strictly constrained by $w_i \ge 0$ (inner bound region).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{../images/Figure2.png}
+    \caption{The Markowitz bullet displaying simulated portfolios and the Efficient Frontier.}
+\end{figure}
+
+\section{Impact of Short-Selling Restrictions}
+In this section, we analyze the portfolio behavior when short-selling is prohibited ($w_i \ge 0$). This constraint significantly alters the feasible region and the Efficient Frontier.
+
+\subsection{Weights Plane Analysis}
+As shown in Figure 3, the feasible portfolios are strictly confined within the triangle defined by the three assets. The theoretical MVL (dotted line) extends beyond the triangle, but only the segment inside the boundaries (bold line) represents achievable portfolios under the no-short-selling constraint.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{../images/Figure3.png}
+    \caption{Minimum Variance Line constrained within the no-short-selling triangle.}
+\end{figure}
+
+\subsection{Risk-Return Frontier}
+When short-selling is restricted, the "Markowitz Bullet" is truncated. As illustrated in Figure 4, the feasible region (orange area) is smaller than the unrestricted area (blue area). The Efficient Frontier (purple line) now starts at the Minimum Variance Portfolio and ends at the asset with the highest return, never extending towards infinity.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{../images/Figure4.png}
+    \caption{Efficient Frontier with non-negative weight constraints.}
+\end{figure}
+
+\newpage
+\appendix
+\section{MATLAB Implementation}
+The following script was used to calculate the covariance matrix, compute the optimal weights dynamically, and generate the visualisations.
+
+\begin{lstlisting}
+% ==================================================
+% FINANCIAL MATHEMATICS - PORTFOLIO OPTIMIZATION
+% Chapter 3: Markowitz Bullet and Efficient Frontier
+% ==================================================
+clear; clc; close all;
+
+% 1. ASSETS (expected return, standard deviation, correlation)
+mu = [0.10, 0.15, 0.20];
+sigma = [0.28, 0.24, 0.25];
+rho = [ 1.00, -0.10,  0.25;
+       -0.10,  1.00,  0.20;
+        0.25,  0.20,  1.00];
+
+% Covariance matrix: C = D * R * D
+C = diag(sigma) * rho * diag(sigma); 
+
+% 2. MVL COEFFICIENTS (w = mu * a + b)
+a = [-8.614, -2.769, 11.384];
+b = [ 1.578,  0.845, -1.422];
+
+% Expected returns (mu) range
+mu_range = linspace(0.05, 0.30, 100)';
+
+% Compute MVL Weights and Risk dynamically (No hardcoded polynomials!)
+w_mvl = [mu_range * a(1) + b(1), mu_range * a(2) + b(2), mu_range * a(3) + b(3)];
+sigma_mvl = sqrt(sum((w_mvl * C) .* w_mvl, 2)); % Efficient matrix row-wise variance
+
+% Identify feasible MVL points for the "No Short Selling" part (all w >= 0)
+is_feasible = (w_mvl(:,1) >= 0) & (w_mvl(:,2) >= 0) & (w_mvl(:,3) >= 0);
+
+% =====================================================
+% FIGURE 1: Weights plane (w2, w3) - WITH SHORT SELLING
+% =====================================================
+figure('Name', 'Weights Plane: Short Selling Allowed', 'Color', 'w');
+hold on; grid on;
+
+% Triangle (No short-selling region)
+fill([0, 1, 0], [0, 0, 1], [0.9 0.9 0.9], 'FaceAlpha', 0.5, 'EdgeColor', 'none', 'DisplayName', 'No Short-Selling Region');
+
+% Extended Budget Lines
+x_ext = [-0.5, 1.5];
+plot(x_ext, [0, 0], 'b-', 'LineWidth', 1.5, 'HandleVisibility', 'off');
+plot([0, 0], x_ext, 'b-', 'LineWidth', 1.5, 'HandleVisibility', 'off');
+plot(x_ext, 1 - x_ext, 'b-', 'LineWidth', 1.5, 'DisplayName', 'Budget Limits');
+
+% Minimum Variance Line (MVL)
+plot(w_mvl(:,2), w_mvl(:,3), 'r-', 'LineWidth', 2.5, 'DisplayName', 'Theoretical MVL');
+
+% Individual Assets
+scatter([0, 1, 0], [0, 0, 1], 80, 'y', 'filled', 'MarkerEdgeColor', 'k', 'DisplayName', 'Assets');
+text(-0.05, -0.05, 'S_1', 'FontWeight', 'bold');
+text(1.05, -0.05, 'S_2', 'FontWeight', 'bold');
+text(-0.05, 1.05, 'S_3', 'FontWeight', 'bold');
+
+xlabel('Weight w_2', 'FontWeight', 'bold');
+ylabel('Weight w_3', 'FontWeight', 'bold');
+title('Feasible Portfolios on the w_2, w_3 plane (Short Selling Allowed)');
+xlim([-0.5 1.5]); ylim([-0.5 1.5]); axis equal; legend('Location', 'best');
+
+% ============================================================
+% FIGURE 2: Risk-Return plane (sigma, mu) - WITH SHORT SELLING
+% ============================================================
+figure('Name', 'Risk-Return Plane : Short Selling Allowed', 'Color', 'w');
+hold on; grid on;
+
+N_pts = 30000;
+
+% Random Portfolios (WITH short selling)
+w_short = randn(N_pts, 3);
+w_short = w_short ./ sum(w_short, 2);
+mu_short = w_short * mu';
+sigma_short = sqrt(sum((w_short * C) .* w_short, 2));
+scatter(sigma_short, mu_short, 2, [0.85 0.93 1.00], 'filled', 'DisplayName', 'Short Selling Allowed');
+
+% Random Portfolios (NO short selling)
+w_noshort = rand(N_pts, 3);
+w_noshort = w_noshort ./ sum(w_noshort, 2);
+mu_noshort = w_noshort * mu';
+sigma_noshort = sqrt(sum((w_noshort * C) .* w_noshort, 2));
+scatter(sigma_noshort, mu_noshort, 2, [1.00 0.85 0.70], 'filled', 'DisplayName', 'No Short Selling Area');
+
+% Two-security portfolio edges (Dynamic calculation)
+w_ext = linspace(-0.5, 1.5, 200)';
+w12 = [1-w_ext, w_ext, zeros(200,1)];
+w23 = [zeros(200,1), 1-w_ext, w_ext];
+w13 = [1-w_ext, zeros(200,1), w_ext];
+
+plot(sqrt(sum((w12*C).*w12, 2)), w12*mu', 'r--', 'LineWidth', 2, 'DisplayName', 'S1-S2 Edge');
+plot(sqrt(sum((w23*C).*w23, 2)), w23*mu', 'g--', 'LineWidth', 2, 'DisplayName', 'S2-S3 Edge');
+plot(sqrt(sum((w13*C).*w13, 2)), w13*mu', 'b--', 'LineWidth', 2, 'DisplayName', 'S1-S3 Edge');
+
+% Minimum Variance Line (The Markowitz Bullet)
+plot(sigma_mvl, mu_range, '-', 'Color', [0.5 0 0.5], 'LineWidth', 3.5, 'DisplayName', 'MVL');
+
+% Individual Assets
+scatter(sigma, mu, 100, 'y', 'filled', 'MarkerEdgeColor', 'k', 'HandleVisibility', 'off');
+text(sigma(1)+0.005, mu(1), 'S_1', 'FontWeight', 'bold');
+text(sigma(2)+0.005, mu(2), 'S_2', 'FontWeight', 'bold');
+text(sigma(3)+0.005, mu(3), 'S_3', 'FontWeight', 'bold');
+
+xlabel('Standard Deviation (\sigma)', 'FontWeight', 'bold');
+ylabel('Expected Return (\mu)', 'FontWeight', 'bold');
+title('The Markowitz Bullet (\sigma, \mu plane)');
+xlim([0.15 0.35]); ylim([0.05 0.25]);
+legend('Location', 'northwest', 'AutoUpdate', 'off');
+
+% =========================================================
+% FIGURE 3: Weights plane (w2, w3) - NO SHORT SELLING
+% =========================================================
+figure('Name', 'Weights Plane: No Short Selling', 'Color', 'w');
+hold on; grid on;
+
+fill([0, 1, 0], [0, 0, 1], [0.9 0.9 0.9], 'FaceAlpha', 0.8, 'EdgeColor', 'b', 'LineWidth', 1.5, 'DisplayName', 'Feasible Triangle');
+plot(w_mvl(:,2), w_mvl(:,3), 'r:', 'LineWidth', 1.5, 'DisplayName', 'Theoretical MVL');
+plot(w_mvl(is_feasible, 2), w_mvl(is_feasible, 3), 'r-', 'LineWidth', 3, 'DisplayName', 'Feasible MVL');
+
+scatter([0, 1, 0], [0, 0, 1], 100, 'y', 'filled', 'MarkerEdgeColor', 'k', 'DisplayName', 'Assets');
+text(-0.05, -0.05, 'S_1', 'FontWeight', 'bold'); text(1.05, -0.05, 'S_2', 'FontWeight', 'bold'); text(-0.05, 1.05, 'S_3', 'FontWeight', 'bold');
+
+xlabel('Weight w_2', 'FontWeight', 'bold'); ylabel('Weight w_3', 'FontWeight', 'bold');
+title('Weights Plane: MVL inside No-Short-Selling Triangle');
+xlim([-0.1 1.1]); ylim([-0.1 1.1]); axis equal; legend('Location', 'best');
+
+% =========================================================
+% FIGURE 4: Risk-Return plane (sigma, mu) - NO SHORT SELLING
+% =========================================================
+figure('Name', 'Risk-Return Plane: No Short Selling', 'Color', 'w');
+hold on; grid on;
+
+% Orange Area (Reused from Fig 2)
+scatter(sigma_noshort, mu_noshort, 2, [1.00 0.85 0.70], 'filled', 'DisplayName', 'Long Only Portfolios');
+
+% Constrained Edges (Weights strictly 0 to 1)
+w_s = linspace(0, 1, 200)';
+w12_ns = [1-w_s, w_s, zeros(200,1)]; w23_ns = [zeros(200,1), 1-w_s, w_s]; w13_ns = [1-w_s, zeros(200,1), w_s];
+plot(sqrt(sum((w12_ns*C).*w12_ns, 2)), w12_ns*mu', 'r-', 'LineWidth', 2, 'DisplayName', 'S1-S2 Edge');
+plot(sqrt(sum((w23_ns*C).*w23_ns, 2)), w23_ns*mu', 'g-', 'LineWidth', 2, 'DisplayName', 'S2-S3 Edge');
+plot(sqrt(sum((w13_ns*C).*w13_ns, 2)), w13_ns*mu', 'b-', 'LineWidth', 2, 'DisplayName', 'S1-S3 Edge');
+
+% Feasible Efficient Frontier
+plot(sigma_mvl(is_feasible), mu_range(is_feasible), '-', 'Color', [0.5 0 0.5], 'LineWidth', 4, 'DisplayName', 'Efficient Frontier (Long only)');
+
+scatter(sigma, mu, 100, 'y', 'filled', 'MarkerEdgeColor', 'k', 'HandleVisibility', 'off');
+text(sigma(1)+0.005, mu(1), 'S_1', 'FontWeight', 'bold'); text(sigma(2)+0.005, mu(2), 'S_2', 'FontWeight', 'bold'); text(sigma(3)+0.005, mu(3), 'S_3', 'FontWeight', 'bold');
+
+xlabel('Standard Deviation (\sigma)', 'FontWeight', 'bold'); ylabel('Expected Return (\mu)', 'FontWeight', 'bold');
+title('Risk-Return: Frontier constrained by w_i \geq 0');
+xlim([0.15 0.35]); ylim([0.05 0.25]); legend('Location', 'northwest');
+
+% --- Auto-export to your specific images folder ---
+
+if ~exist('../images', 'dir'), mkdir('../images'); end % Create 'images' if not exist
+
+exportgraphics(figure(1), '../images/Figure1_Short_Weights.png', 'Resolution', 300);
+exportgraphics(figure(2), '../images/Figure2_Short_Risk.png', 'Resolution', 300);
+exportgraphics(figure(3), '../images/Figure3_NoShort_Weights.png', 'Resolution', 300);
+exportgraphics(figure(4), '../images/Figure4_NoShort_Risk.png', 'Resolution', 300);
+\end{lstlisting}
+
+\end{document}
