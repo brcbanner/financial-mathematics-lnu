@@ -1,0 +1,39 @@
+# --- MATLAB ---
+# File temporanei di editing
+*.asv
+*.m~
+
+# Log e crash report
+*.log
+hs_err_pid*
+
+# Dati e cache di compilazione simulink/mex
+slprj/
+*.mex*
+*.slxc
+
+# --- LaTeX ---
+# File ausiliari generati durante la compilazione (I più comuni)
+*.aux
+*.fdb_latexmk
+*.fls
+*.gz
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# File specifici per bibliografia e indici
+*.blg
+*.bbl
+*.ind
+*.ilg
+*.idx
+*.bcf
+*.xml
+
+# --- macOS ---
+.DS_Store
+
+# --- VS Code ---
+.vscode/

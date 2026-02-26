@@ -1,0 +1,93 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+
+\title{Computer Assignment Chapter 2 - FM}
+\author{Matteo Pinzani}
+\date{February 2026}
+
+\usepackage{listings}
+\usepackage{xcolor} % Optional: for adding colors to your code
+
+% Define MATLAB-like colors
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Set the style for the code
+\lstset{
+    language=Matlab,
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Answers}
+
+\subsection{Financial meaning of the functions}
+\begin{itemize}
+    \item $(1+r/m)^{\lfloor tm \rfloor}$: it represents the value of an investment with the periodic/discrete compounding where interest is added to the balance $m$ times per year. The flat parts of the staircase represent the time between interest payments.
+    \item $e^{rt}$: this is the value of an investment with continuous compounding and represents the limit where the compounding frequency $m$ is infinite.
+\end{itemize}
+
+\subsection{What happens when $m$ gets bigger}
+As shown in Figure \ref{fig:comparison}, when $m$ increases, the interest is reinvested more frequently. This results in more "steps" which are smaller in size, causing the discrete growth function to move upward and get closer to the continuous curve.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\linewidth]{../assets/graphical_comparison.png}
+    \caption{Graphical comparison between periodic and continuous compounding}
+    \label{fig:comparison}
+\end{figure}
+
+\subsection{Comparison with Proposition 2.5}
+Proposition 2.5 states that the periodic compounding future value $V(t)$ increases if any one of the parameters $m$, $t$, $r$ or $P$ increases, while the others remain constant. My numerical simulation supports this proposition through the following observations:
+\begin{itemize}
+    \item \underline{Increase in $m$} \\
+    The proposition claims that increasing the compounding frequency $m$ results in a higher future value. In the generated plot, the "staircase" functions for higher $m$ values (e.g., $m = 24$) are positioned strictly above the functions for lower $m$ values (e.g., $m = 1, 2, 4$). This visually confirms that as $m$ increases, the value of the investment at any given time $t$ increases.
+    \item \underline{Increase in $t$} \\
+    The proposition states that $V(t)$ increases with time. This is evident in the positive slope of all the discrete staircases.
+\end{itemize}
+
+\subsection{Financial explanation of the monotone convergence as $m \to \infty$}
+The convergence is monotone positive(always increasing) because a higher compounding frequency $m$ allows us to earn "interest on interest" sooner. Since we never lose money by compounding more often, the value of the investment for a higher $m$ is always greater than or equal to the value for a lower $m$ at any time $t$.
+
+\section{MATLAB Implementation}
+Below there is the code used to generate the comparison between periodic and continuous compounding:
+
+\begin{lstlisting}[language=Matlab, caption=MATLAB script for Compounding Convergence]
+r = 0.10;           
+m_list = [1, 2, 4, 12, 24];
+figure;
+hold on;
+t_smooth = 0:0.001:5; 
+V_cont = exp(r * t_smooth);
+plot(t_smooth, V_cont, 'r--', 'LineWidth', 2);
+for m = m_list
+    t = 0:(1/m^2):5; 
+    V_per = (1 + r/m).^(floor(t * m)); 
+    plot(t, V_per, 'LineWidth', 1.5); 
+end
+grid on;
+legend('Continuous', 'm=1', 'm=2', 'm=4', 'm=12', 'm=24', 'Location', 'best');
+xlabel('Time (t)');
+ylabel('Value of Investment');
+title('Convergence to Continuous Compounding');
+\end{lstlisting}
+\end{document}
