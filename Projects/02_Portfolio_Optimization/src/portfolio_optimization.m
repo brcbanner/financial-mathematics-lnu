@@ -137,8 +137,28 @@ plot(sqrt(sum((w12_ns*C).*w12_ns, 2)), w12_ns*mu', 'r-', 'LineWidth', 2, 'Displa
 plot(sqrt(sum((w23_ns*C).*w23_ns, 2)), w23_ns*mu', 'g-', 'LineWidth', 2, 'DisplayName', 'S2-S3 Edge');
 plot(sqrt(sum((w13_ns*C).*w13_ns, 2)), w13_ns*mu', 'b-', 'LineWidth', 2, 'DisplayName', 'S1-S3 Edge');
 
-% Feasible Efficient Frontier
-plot(sigma_mvl(is_feasible), mu_range(is_feasible), '-', 'Color', [0.5 0 0.5], 'LineWidth', 4, 'DisplayName', 'Efficient Frontier (Long only)');
+% --- TRUE CONSTRAINED EFFICIENT FRONTIER (PIECEWISE) ---
+% 1. Find the index of the Minimum Variance Portfolio (minimum risk)
+[~, min_idx] = min(sigma_mvl);
+mu_mvp = mu_range(min_idx);
+
+% 2. Filter the inner part (Feasible Theoretical MVL)
+is_efficient = is_feasible & (mu_range >= mu_mvp);
+plot(sigma_mvl(is_efficient), mu_range(is_efficient), '-', 'Color', [0.5 0 0.5], 'LineWidth', 4, 'DisplayName', 'Efficient Frontier');
+
+% 3. "Stitch" the final segment (Walking the S2-S3 boundary)
+% Find the exact point where the theoretical MVL "breaks" (exits the triangle)
+max_mu_mvl = max(mu_range(is_efficient)); 
+
+% Take the returns of the S2-S3 edge and filter only the part beyond the breaking point
+mu_edge = w23_ns * mu';
+is_edge_efficient = mu_edge >= max_mu_mvl;
+
+% Calculate the risk for that specific edge segment
+sigma_edge = sqrt(sum((w23_ns*C).*w23_ns, 2));
+
+% Draw the final segment using the same purple color (without adding a new legend entry)
+plot(sigma_edge(is_edge_efficient), mu_edge(is_edge_efficient), '-', 'Color', [0.5 0 0.5], 'LineWidth', 4, 'HandleVisibility', 'off');
 
 scatter(sigma, mu, 100, 'y', 'filled', 'MarkerEdgeColor', 'k', 'HandleVisibility', 'off');
 text(sigma(1)+0.005, mu(1), 'S_1', 'FontWeight', 'bold'); text(sigma(2)+0.005, mu(2), 'S_2', 'FontWeight', 'bold'); text(sigma(3)+0.005, mu(3), 'S_3', 'FontWeight', 'bold');
@@ -146,12 +166,3 @@ text(sigma(1)+0.005, mu(1), 'S_1', 'FontWeight', 'bold'); text(sigma(2)+0.005, m
 xlabel('Standard Deviation (\sigma)', 'FontWeight', 'bold'); ylabel('Expected Return (\mu)', 'FontWeight', 'bold');
 title('Risk-Return: Frontier constrained by w_i \geq 0');
 xlim([0.15 0.35]); ylim([0.05 0.25]); legend('Location', 'northwest');
-
-% --- Auto-export to your specific images folder ---
-
-if ~exist('../images', 'dir'), mkdir('../images'); end % Create 'images' if not exist
-
-exportgraphics(figure(1), '../images/Figure1_Short_Weights.png', 'Resolution', 300);
-exportgraphics(figure(2), '../images/Figure2_Short_Risk.png', 'Resolution', 300);
-exportgraphics(figure(3), '../images/Figure3_NoShort_Weights.png', 'Resolution', 300);
-exportgraphics(figure(4), '../images/Figure4_NoShort_Risk.png', 'Resolution', 300);
