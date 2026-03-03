@@ -1,0 +1,163 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\geometry{margin=1in}
+
+\lstset{
+    language=Matlab,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    stringstyle=\color{purple},
+    commentstyle=\color{teal},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{lightgray!10}
+}
+
+\title{Computer Assignment for Chapter 6 \\ \large Monte Carlo Estimation of Option Pricing in a Binomial Model}
+\author{Matteo Pinzani}
+\date{March 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This report presents the estimation of a European Call option price using the Monte Carlo method within a discrete-time binomial model. We are given a two-step model ($N = 2$) and use random data to first calculate the exact theoretical price via the risk-neutral valutation formula, and subsequently approximate it through simulation.
+
+\section{Theoretical Background and Exact Pricing}
+The market consists of a risk-free bond and a risky asset (stock). The parameters are:
+\begin{itemize}
+    \item Initial stock price: $S(0) = 120$
+    \item Upward return factor: $U = 0.2$
+    \item Downward return factor: $D = -0.1$
+    \item Risk-free rate: $R = 0.1$
+    \item Strike price: $X = 120$
+    \item Number of steps: $N = 2$
+\end{itemize}
+
+\subsection{Risk-Neutral Probabilities}
+To avoid arbitrage ($D < R < U$), the pricing of contingent claim is performed under the risk-neutral measure $\mathbb{P}^*$. The risk-neutral probability of an upward movement, $p^*$, is given by:
+\begin{equation}
+    p^* = \frac{R - D}{U - D} = \frac{2}{3} \approx 0.6667
+\end{equation}
+Consequently, the probability of a downward movement is $q^* = 1 - p^* = \frac{1}{3}$.
+
+\subsection{Final Stock Prices and Returns}
+At the expity time $T = 2$, the stock can take three possible value depending on the path:
+\begin{align*}
+    S_{uu}(2) &= S(0)(1+U)^2 = 172.8 \\
+    S_{ud}(2) &= S(0)(1+U)(1+D) = 129.6 \\
+    S_{dd}(2) &= S(0)(1+D)^2 = 97.2
+\end{align*}
+The return of the European Call option is $C(2) = \max(S(2) - X, 0)$, producing:
+\begin{align*}
+    C_{uu}(2) &= \max(S_{uu}(2) - X, 0) =  52.8 \\
+    C_{ud}(2) &= \max(S_{ud}(2) - X, 0) = 9.6 \\
+    C_{dd}(2) &= \max(S_{dd}(2) - X, 0) = 0
+\end{align*}
+
+\subsection{Discounted Expectation}
+The valuation relies on the fundamental no-arbitrage theorem for discrete-time models. According to this principle, the cost of a self-financing strategy that replicates a contingent claim must equal the fair price of the claim itself. Consequently, the inital price of the option, $C_E(0)$, can be expressed simply as the discounted expected value of its final return, calculated under the risk-neutral probability measure $\mathbb{P}^*$:
+\begin{equation}
+    C_E(0) = \frac{1}{(1+R)^2} \mathbb{E}^*[C(2)]
+\end{equation}
+Expanding the expectation:
+\begin{equation}
+    \mathbb{E}^*[C(2)] = (p^*)^2 C_{uu}(2) + 2p^*q^* C_{ud}(2) + (q^*)^2 C_{dd}(2) = 27.7333 \\
+\end{equation}
+Discounting back to $t = 0$:
+\begin{equation}
+    C_E(0) = \frac{\mathbb{E}^*[C(2)]}{(1+R)^2} = 22.9201
+\end{equation}
+
+\section{Monte Carlo Estimation}
+The Monte Carlo methos estimates the expected return $\mathbb{E}^*[C(2)]$ by simulating a large number of independent random paths for the stock price using the risk-neutral probabilities.\\
+Let $M$ be the total number of simulated paths. For the $i$-th simulation, the final stock price $S_i(2)$ is generated, and the corresponding return $f(S_i(2)) = \max(S_i(2) - X, 0)$ is calculated.\\
+By the Law of Large Numbers, the expectation is approximated by the sample mean:
+\begin{equation}
+    C_E(0) \approx \frac{1}{(1+R)^2} \left[ \frac{1}{M} \sum_{i=1}^{M} f(S_i(2)) \right]
+\end{equation}
+
+\section{Results}
+Using MATLAB to simulate $M = 1,000,000$ paths, the algorithm randomly assigned an 'Up' or 'Down' movement at each step based on the uniform distribution threshold of $p^* = 2/3$.\\
+The numerical results obtained are:
+\begin{itemize}
+    \item \textbf{Exact Analytical Price}: 22.9201
+    \item \textbf{Monte Carlo Estimated Price}: $\approx$ 22.92
+\end{itemize}
+The Monte Carlo estimation converges tightly to the theoretical value, confirming the validity of both the risk-neutral pricing framework and the computational simulation.
+
+\newpage
+\section{MATLAB Source Code}
+\begin{lstlisting}
+% 1. Initialization of Data
+S0 = 120;       % Initial stock price
+U = 0.2;        % Upward return
+D = -0.1;       % Downward return
+R = 0.1;        % Risk-free rate
+X = 120;        % Strike price
+N = 2;          % Number of steps (T = 2)
+M = 1000000;    % Number of Monte Carlo simulations
+
+% 2. Calculate the Risk-Neutral Probabilities
+p_star = (R - D) / (U - D);
+q_star = 1 - p_star;    % or q_star = (U - R) / (U - D)
+
+% 3. EXACT Theoretical Calculation (for comparison)
+% Final stock prices for the 3 possible nodes at T = 2
+Suu = S0 * (1 + U)^2;
+Sud = S0 * (1 + U) * (1 + D);
+Sdd = S0 * (1 + D)^2;
+
+% Corresponding returns
+Cuu = max(Suu - X, 0);  % Cuu = (Suu - X)^+
+Cud = max(Sud - X, 0);  % Cud = (Sud - X)^+
+Cdd = max(Sdd - X, 0);  % Cdd = (Sdd - X)^+
+
+% Expected payoff under risk-neutral measure E*[C(2)]
+Expected_Return_Exact = (p_star^2)*Cuu + (2*p_star*q_star)*Cud + (q_star^2)*Cdd;
+
+% Discounted expected return
+C0_exact = Expected_Return_Exact / (1 + R)^2;
+
+% 4. Monte Carlo Simulation
+% Simulate step 1 and step 2 for M paths using uniformly distributed random
+% numbers
+step1_is_up = rand(M, 1) < p_star;
+step2_is_up = rand(M, 1) < p_star;
+
+% Total number of 'Up' steps for each simulated path (can be 0 -> [dd], 1 ->
+% [ud, du], or 2 -> [uu])
+up_steps = step1_is_up + step2_is_up;
+down_steps = N - up_steps;
+
+% Calculate the final stock prices for all M paths simultaneously
+ST = S0 * ((1 + U).^up_steps) .* ((1 + D).^down_steps);
+
+% Calculate returns for all M paths
+Returns = max(ST - X, 0);
+
+% Estimate the expected return E*[C(2)]
+Expected_Return_MC = mean(Returns);
+
+% Discount back to time 0
+C0_MC = Expected_Return_MC / (1 + R)^2;
+
+% 5. Display Results
+fprintf('--- Binomial Option Pricing (N=2) ---\n');
+fprintf('Risk-neutral probability p*:   %.4f\n', p_star);
+fprintf('Exact Analytical Price:        %.4f\n', C0_exact);
+fprintf('Monte Carlo Estimate:          %.4f\n', C0_MC);
+fprintf('Estimation Error:              %.4f\n', abs(C0_exact - C0_MC));
+\end{lstlisting}
+
+\end{document}
